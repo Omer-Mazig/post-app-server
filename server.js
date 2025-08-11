@@ -1500,6 +1500,24 @@ app.get("/api/posts/:id", (req, res) => {
   res.json(post);
 });
 
+// GET comments for a post (paginated)
+app.get("/api/posts/:id/comments", (req, res) => {
+  const { id } = req.params;
+  // Support both new (cursor/limit) and legacy (_start/_limit) params
+  const cursorParam = req.query.cursor ?? req.query._start ?? "0";
+  const limitParam = req.query.limit ?? req.query._limit ?? "10";
+
+  const start = parseInt(String(cursorParam), 10) || 0;
+  const limit = parseInt(String(limitParam), 10) || 10;
+  const end = start + limit;
+
+  const allComments = db.comments.filter((c) => c.postId === id);
+  const items = allComments.slice(start, end);
+  const nextCursor = end < allComments.length ? end : undefined;
+
+  res.json({ items, nextCursor });
+});
+
 // CREATE new post
 app.post("/api/posts", (req, res) => {
   const { title, body, userId } = req.body;
