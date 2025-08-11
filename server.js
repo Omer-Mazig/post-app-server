@@ -1233,20 +1233,30 @@ const generateId = () => {
 
 // GET all posts
 app.get("/api/posts", (req, res) => {
-  const { search } = req.query;
+  const { q } = req.query;
+  // Support both new (cursor/limit) and legacy (_start/_limit) params
+  const cursorParam = req.query.cursor ?? req.query._start ?? "0";
+  const limitParam = req.query.limit ?? req.query._limit ?? "10";
 
   let filteredPosts = [...db.posts];
 
   // Apply search filter if provided
-  if (search) {
+  if (q) {
     filteredPosts = filteredPosts.filter(
       (post) =>
-        post.title.toLowerCase().includes(search.toLowerCase()) ||
-        post.content.toLowerCase().includes(search.toLowerCase())
+        post.title.toLowerCase().includes(String(q).toLowerCase()) ||
+        post.body.toLowerCase().includes(String(q).toLowerCase())
     );
   }
 
-  res.json(filteredPosts);
+  const start = parseInt(String(cursorParam), 10) || 0;
+  const limit = parseInt(String(limitParam), 10) || 10;
+  const end = start + limit;
+
+  const items = filteredPosts.slice(start, end);
+  const nextCursor = end < filteredPosts.length ? end : undefined;
+  console.log("items", items);
+  res.json({ items, nextCursor });
 });
 
 // GET single post
