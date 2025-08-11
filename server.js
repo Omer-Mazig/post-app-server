@@ -1537,6 +1537,13 @@ app.post("/api/posts", (req, res) => {
   res.status(201).json(newPost);
 });
 
+// DELETE a post
+app.delete("/api/posts/:id", (req, res) => {
+  const { id } = req.params;
+  db.posts = db.posts.filter((p) => p.id !== id);
+  res.status(204).send();
+});
+
 // Dummy current user endpoint
 app.get("/api/me", (req, res) => {
   const currentUserId = "1";
